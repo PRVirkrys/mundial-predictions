@@ -24,4 +24,9 @@ public class UserService {
 		return userRepository.save(user);
 	}
 
+	public List<User> orderUsersByScore() {
+		return userRepository.findAllByOrderByTotalScoreDesc();
+
+	}
+
 }

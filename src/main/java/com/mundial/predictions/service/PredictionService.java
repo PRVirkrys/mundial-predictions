@@ -65,6 +65,9 @@ public class PredictionService {
 
 			for (Prediction prediction : predictions) {
 
+				User user = prediction.getUser();
+				int earnedScore = 0;
+
 				if (prediction.getPredictedHomeGoals() > prediction.getPredictedAwayGoals()) {
 					predictionWinner = match.getHomeTeam();
 				} else if (prediction.getPredictedHomeGoals() < prediction.getPredictedAwayGoals()) {
@@ -75,8 +78,12 @@ public class PredictionService {
 
 				if (isTie && predictionTie) {
 					prediction.setCorrectWinner(true);
+					user.setTotalScore(user.getTotalScore() + 1);
+
 				} else if (!isTie && !predictionTie && predictionWinner.equals(realWinner)) {
 					prediction.setCorrectWinner(true);
+					earnedScore = 1;
+					user.setTotalScore(user.getTotalScore() + 1);
 				} else {
 					prediction.setCorrectWinner(false);
 				}
@@ -84,11 +91,13 @@ public class PredictionService {
 				if (prediction.getPredictedHomeGoals().equals(match.getHomeGoals())
 						&& prediction.getPredictedAwayGoals().equals(match.getAwayGoals())) {
 					prediction.setCorrectScore(true);
+					user.setTotalScore(user.getTotalScore() + 3);
 				} else {
 					prediction.setCorrectScore(false);
 				}
 
 				predictionRepository.save(prediction);
+				userRepository.save(user);
 
 			}
 

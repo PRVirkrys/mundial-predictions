@@ -31,4 +31,8 @@ public class UserController {
 		return userService.createUser(user);
 	}
 
+	@GetMapping("/ranking")
+	public List<User> orderUsersByScore() {
+		return userService.orderUsersByScore();
+	}
 }

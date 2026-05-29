@@ -1,4 +1,4 @@
-package com.mundial.predictions.service;
+package com.mundial.predictions.controller;
 
 import java.util.List;
 
@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mundial.predictions.model.Match;
 import com.mundial.predictions.model.Prediction;
+import com.mundial.predictions.service.MatchService;
+import com.mundial.predictions.service.PredictionService;
 
 @RestController
 @RequestMapping("/predictions")
