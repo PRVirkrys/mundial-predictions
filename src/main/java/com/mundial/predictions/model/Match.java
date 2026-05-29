@@ -1,0 +1,101 @@
+package com.mundial.predictions.model;
+
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Entity
+@Table(name = "matches")
+public class Match {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
+
+	private String homeTeam;
+	private String awayTeam;
+	private String location;
+	@JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+	private LocalDateTime matchDate;
+	private Integer homeGoals;
+	private Integer awayGoals;
+
+	// JPA necesita un constructor vacío obligatoriamente. Es como un requisito del
+	// framework para poder crear objetos cuando lee datos de la base de datos.
+	public Match() {
+
+	}
+
+	public Match(Integer id, String homeTeam, String awayTeam, String location, LocalDateTime matchDate,
+			Integer homeGoals, Integer awayGoals) {
+		super();
+		this.id = id;
+		this.homeTeam = homeTeam;
+		this.awayTeam = awayTeam;
+		this.location = location;
+		this.matchDate = matchDate;
+		this.homeGoals = homeGoals;
+		this.awayGoals = awayGoals;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public String getHomeTeam() {
+		return homeTeam;
+	}
+
+	public void setHomeTeam(String homeTeam) {
+		this.homeTeam = homeTeam;
+	}
+
+	public String getAwayTeam() {
+		return awayTeam;
+	}
+
+	public void setAwayTeam(String awayTeam) {
+		this.awayTeam = awayTeam;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public LocalDateTime getMatchDate() {
+		return matchDate;
+	}
+
+	public void setMatchDate(LocalDateTime matchDate) {
+		this.matchDate = matchDate;
+	}
+
+	public Integer getHomeGoals() {
+		return homeGoals;
+	}
+
+	public void setHomeGoals(Integer homeGoals) {
+		this.homeGoals = homeGoals;
+	}
+
+	public Integer getAwayGoals() {
+		return awayGoals;
+	}
+
+	public void setAwayGoals(Integer awayGoals) {
+		this.awayGoals = awayGoals;
+	}
+
+}
