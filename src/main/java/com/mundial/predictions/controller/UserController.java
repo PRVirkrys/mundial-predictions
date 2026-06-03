@@ -1,7 +1,9 @@
 package com.mundial.predictions.controller;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,4 +37,17 @@ public class UserController {
 	public List<User> orderUsersByScore() {
 		return userService.orderUsersByScore();
 	}
+
+	@PostMapping("/login")
+	public ResponseEntity<User> login(@RequestBody User currentUser) {
+
+		Optional<User> user = userService.findByName(currentUser.getName(), currentUser.getPassword());
+
+		if (user.isPresent()) {
+			return ResponseEntity.ok(user.get());
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
+
 }

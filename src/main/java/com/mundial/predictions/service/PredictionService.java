@@ -30,6 +30,10 @@ public class PredictionService {
 		return predictionRepository.findAll();
 	}
 
+	public List<Prediction> getAllByUser(User user) {
+		return predictionRepository.findByUser(user);
+	}
+
 	public Prediction createPrediction(Integer userId, Integer matchId, Integer homeGoals, Integer awayGoals) {
 		User user = userRepository.findById(userId).orElse(null);
 		Match match = matchRepository.findById(matchId).orElse(null);
@@ -40,6 +44,10 @@ public class PredictionService {
 		prediction.setPredictedHomeGoals(homeGoals);
 		prediction.setPredictedAwayGoals(awayGoals);
 
+		return predictionRepository.save(prediction);
+	}
+
+	public Prediction updatePrediction(Integer id, Prediction prediction) {
 		return predictionRepository.save(prediction);
 	}
 

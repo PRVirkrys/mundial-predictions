@@ -1,6 +1,7 @@
 package com.mundial.predictions.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,14 @@ public class UserService {
 	public List<User> orderUsersByScore() {
 		return userRepository.findAllByOrderByTotalScoreDesc();
 
+	}
+
+	public Optional<User> findByName(String name, String password) {
+		return userRepository.findByNameAndPassword(name, password);
+	}
+
+	public User findUserById(Integer id) {
+		return userRepository.findById(id).orElse(null);
 	}
 
 }

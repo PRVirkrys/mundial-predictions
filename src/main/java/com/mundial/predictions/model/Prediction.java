@@ -45,6 +45,10 @@ public class Prediction {
 		this.correctScore = correctScore;
 	}
 
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
 	public Integer getId() {
 		return id;
 	}
