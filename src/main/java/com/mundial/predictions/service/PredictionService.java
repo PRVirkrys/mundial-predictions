@@ -47,7 +47,13 @@ public class PredictionService {
 		return predictionRepository.save(prediction);
 	}
 
-	public Prediction updatePrediction(Integer id, Prediction prediction) {
+	public Prediction updatePrediction(Integer id, Integer homeGoals, Integer awayGoals) {
+
+		Prediction prediction = predictionRepository.findById(id).orElse(null);
+
+		prediction.setPredictedHomeGoals(homeGoals);
+		prediction.setPredictedAwayGoals(awayGoals);
+
 		return predictionRepository.save(prediction);
 	}
 

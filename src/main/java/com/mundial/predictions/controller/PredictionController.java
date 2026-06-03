@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,9 +50,9 @@ public class PredictionController {
 	}
 
 	@PutMapping("/{id}")
-	public Prediction updatePrediction(@PathVariable Integer id, @RequestBody Prediction prediction) {
-		prediction.setId(id);
-		return predictionService.updatePrediction(id, prediction);
+	public Prediction updatePrediction(@PathVariable Integer id, @RequestParam Integer homeGoals,
+			@RequestParam Integer awayGoals) {
+		return predictionService.updatePrediction(id, homeGoals, awayGoals);
 	}
 
 	// endopoint para comprobar si funciona con postman
