@@ -1,10 +1,13 @@
 package com.mundial.predictions.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,41 +39,70 @@ public class MatchService {
 		return matchRepository.findById(id).orElse(null);
 	}
 
-	public void importMatches() throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
-		RestTemplate restTemplate = new RestTemplate();
+	@Scheduled(cron = "0 0 * * * *")
+	public void importMatches() {
 
-		String jsonStr = restTemplate.getForObject(
-				"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json", String.class);
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			RestTemplate restTemplate = new RestTemplate();
 
-		WorldCupDTO worldCup = mapper.readValue(jsonStr, WorldCupDTO.class);
+			String jsonStr = restTemplate.getForObject(
+					"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
+					String.class);
 
-		String teamsStr = restTemplate.getForObject(
-				"https://raw.githubusercontent.com/openfootball/worldcup.json/refs/heads/master/2026/worldcup.teams.json",
-				String.class);
-		TeamDTO[] teams = mapper.readValue(teamsStr, TeamDTO[].class);
+			WorldCupDTO worldCup = mapper.readValue(jsonStr, WorldCupDTO.class);
 
-		Map<String, String> teamData = new HashMap<>();
+			String teamsStr = restTemplate.getForObject(
+					"https://raw.githubusercontent.com/openfootball/worldcup.json/refs/heads/master/2026/worldcup.teams.json",
+					String.class);
+			TeamDTO[] teams = mapper.readValue(teamsStr, TeamDTO[].class);
 
-		for (TeamDTO team : teams) {
-			teamData.put(team.getName(), team.getFlagIcon());
-		}
+			Map<String, String> teamData = new HashMap<>();
 
-		worldCup.getMatches().forEach(matchDTO -> {
-			Match match = new Match();
-			match.setHomeTeam(matchDTO.getTeam1());
-			match.setAwayTeam(matchDTO.getTeam2());
-			match.setLocation(matchDTO.getGround());
-			match.setGroup(matchDTO.getGroup());
-			match.setRound(matchDTO.getRound());
-			if (matchDTO.getDate() != null) {
-				LocalDate date = LocalDate.parse(matchDTO.getDate());
-				match.setMatchDate(date.atStartOfDay());
+			for (TeamDTO team : teams) {
+				teamData.put(team.getName(), team.getFlagIcon());
 			}
-			match.setHomeTeamFlag(teamData.get(matchDTO.getTeam1()));
-			match.setAwayTeamFlag(teamData.get(matchDTO.getTeam2()));
-			matchRepository.save(match);
-		});
+
+			worldCup.getMatches().forEach(matchDTO -> {
+
+				if (matchDTO.getDate() == null || matchDTO.getTeam1().length() > 20) {
+					return; // salta partidos sin fecha o sin equipos reales
+				}
+
+				LocalDateTime matchDate = LocalDate.parse(matchDTO.getDate()).atStartOfDay();
+				Optional<Match> existing = matchRepository.findByHomeTeamAndAwayTeamAndMatchDate(matchDTO.getTeam1(),
+						matchDTO.getTeam2(), matchDate);
+
+				if (existing.isPresent()) {
+					Match match = existing.get();
+					match.setLocation(matchDTO.getGround());
+					match.setRound(matchDTO.getRound());
+					match.setHomeTeamFlag(teamData.get(matchDTO.getTeam1()));
+					match.setAwayTeamFlag(teamData.get(matchDTO.getTeam2()));
+					matchRepository.save(match);
+
+				} else {
+					Match match = new Match();
+
+					match.setHomeTeam(matchDTO.getTeam1());
+					match.setAwayTeam(matchDTO.getTeam2());
+					match.setLocation(matchDTO.getGround());
+					match.setGroup(matchDTO.getGroup());
+					match.setRound(matchDTO.getRound());
+					if (matchDTO.getDate() != null) {
+						LocalDate date = LocalDate.parse(matchDTO.getDate());
+						match.setMatchDate(date.atStartOfDay());
+					}
+					match.setHomeTeamFlag(teamData.get(matchDTO.getTeam1()));
+					match.setAwayTeamFlag(teamData.get(matchDTO.getTeam2()));
+					matchRepository.save(match);
+				}
+
+			});
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
