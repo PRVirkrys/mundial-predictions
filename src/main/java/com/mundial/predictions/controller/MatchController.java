@@ -37,4 +37,9 @@ public class MatchController {
 		return matchService.createMatch(match);
 	}
 
+	@PostMapping("/import")
+	public void callMatchesFromApi() throws Exception {
+		matchService.importMatches();
+	}
+
 }

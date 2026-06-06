@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,6 +28,11 @@ public class Match {
 	private LocalDateTime matchDate;
 	private Integer homeGoals;
 	private Integer awayGoals;
+	@Column(name = "match_group")
+	private String group;
+	private String round;
+	private String homeTeamFlag;
+	private String awayTeamFlag;
 
 	// JPA necesita un constructor vacío obligatoriamente. Es como un requisito del
 	// framework para poder crear objetos cuando lee datos de la base de datos.
@@ -96,6 +102,38 @@ public class Match {
 
 	public void setAwayGoals(Integer awayGoals) {
 		this.awayGoals = awayGoals;
+	}
+
+	public String getGroup() {
+		return group;
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
+	}
+
+	public String getRound() {
+		return round;
+	}
+
+	public void setRound(String round) {
+		this.round = round;
+	}
+
+	public String getHomeTeamFlag() {
+		return homeTeamFlag;
+	}
+
+	public void setHomeTeamFlag(String homeTeamFlag) {
+		this.homeTeamFlag = homeTeamFlag;
+	}
+
+	public String getAwayTeamFlag() {
+		return awayTeamFlag;
+	}
+
+	public void setAwayTeamFlag(String awayTeamFlag) {
+		this.awayTeamFlag = awayTeamFlag;
 	}
 
 }
