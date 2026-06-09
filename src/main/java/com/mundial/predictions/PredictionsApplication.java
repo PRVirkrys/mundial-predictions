@@ -19,7 +19,9 @@ public class PredictionsApplication {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**").allowedOrigins("http://localhost:4200", "http://192.168.1.241:4200")
+				registry.addMapping("/**")
+						.allowedOrigins("http://localhost:4200", "http://192.168.1.241:4200",
+								"https://mundial-predicciones-ia-production.up.railway.app")
 						.allowedMethods("GET", "POST", "PUT", "DELETE");
 			}
 		};
