@@ -41,7 +41,7 @@ public class Match {
 	}
 
 	public Match(Integer id, String homeTeam, String awayTeam, String location, LocalDateTime matchDate,
-			Integer homeGoals, Integer awayGoals) {
+			Integer homeGoals, Integer awayGoals, String homeTeamFlag, String awayTeamFlag, String group) {
 		super();
 		this.id = id;
 		this.homeTeam = homeTeam;
@@ -50,6 +50,9 @@ public class Match {
 		this.matchDate = matchDate;
 		this.homeGoals = homeGoals;
 		this.awayGoals = awayGoals;
+		this.homeTeamFlag = homeTeamFlag;
+		this.awayTeamFlag = awayTeamFlag;
+		this.group = group;
 	}
 
 	public Integer getId() {
