@@ -2,6 +2,7 @@ package com.mundial.predictions.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +47,21 @@ public class MatchService {
 			return LocalDate.parse(date).atStartOfDay();
 		}
 
-		String cleanTime = time.split(" ")[0].trim();
-		return LocalDateTime.parse(date + "T" + cleanTime);
+		// "13:00 UTC-6" → ["13:00", "UTC-6"]
+		String[] parts = time.split(" ");
+		String cleanTime = parts[0].trim();
+
+		LocalDateTime localDT = LocalDateTime.parse(date + "T" + cleanTime);
+
+		if (parts.length > 1) {
+			// "UTC-6" → ZoneOffset de -6 horas
+			String offsetStr = parts[1].replace("UTC", "");
+			ZoneOffset offset = ZoneOffset.of(offsetStr);
+			// Convertir a UTC
+			return localDT.atOffset(offset).withOffsetSameInstant(ZoneOffset.UTC).toLocalDateTime();
+		}
+
+		return localDT;
 	}
 
 	@Scheduled(cron = "0 0 * * * *")
@@ -98,4 +112,5 @@ public class MatchService {
 			e.printStackTrace();
 		}
 	}
+
 }
