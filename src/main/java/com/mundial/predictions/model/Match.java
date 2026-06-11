@@ -11,10 +11,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity
-@Table(name = "matches")
+@Table(name = "matches", uniqueConstraints = { @UniqueConstraint(columnNames = { "home_team", "away_team" }) })
+
 public class Match {
 
 	@Id
@@ -33,6 +35,7 @@ public class Match {
 	private String round;
 	private String homeTeamFlag;
 	private String awayTeamFlag;
+	private boolean evaluated = false;
 
 	// JPA necesita un constructor vacío obligatoriamente. Es como un requisito del
 	// framework para poder crear objetos cuando lee datos de la base de datos.
@@ -137,6 +140,14 @@ public class Match {
 
 	public void setAwayTeamFlag(String awayTeamFlag) {
 		this.awayTeamFlag = awayTeamFlag;
+	}
+
+	public boolean isEvaluated() {
+		return evaluated;
+	}
+
+	public void setEvaluated(boolean evaluated) {
+		this.evaluated = evaluated;
 	}
 
 }

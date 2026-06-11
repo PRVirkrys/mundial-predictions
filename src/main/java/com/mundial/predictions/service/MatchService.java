@@ -20,7 +20,6 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class MatchService {
-
 	private final MatchRepository matchRepository;
 
 	public MatchService(MatchRepository matchRepository) {
@@ -39,71 +38,64 @@ public class MatchService {
 		return matchRepository.findById(id).orElse(null);
 	}
 
+	private LocalDateTime parseMatchDateTime(String date, String time) {
+		if (date == null)
+			return null;
+
+		if (time == null || time.isBlank()) {
+			return LocalDate.parse(date).atStartOfDay();
+		}
+
+		String cleanTime = time.split(" ")[0].trim();
+		return LocalDateTime.parse(date + "T" + cleanTime);
+	}
+
 	@Scheduled(cron = "0 0 * * * *")
 	public void importMatches() {
-
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			RestTemplate restTemplate = new RestTemplate();
-
 			String jsonStr = restTemplate.getForObject(
 					"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
 					String.class);
-
 			WorldCupDTO worldCup = mapper.readValue(jsonStr, WorldCupDTO.class);
-
 			String teamsStr = restTemplate.getForObject(
 					"https://raw.githubusercontent.com/openfootball/worldcup.json/refs/heads/master/2026/worldcup.teams.json",
 					String.class);
 			TeamDTO[] teams = mapper.readValue(teamsStr, TeamDTO[].class);
-
 			Map<String, String> teamData = new HashMap<>();
-
 			for (TeamDTO team : teams) {
 				teamData.put(team.getName(), team.getFlagIcon());
 			}
-
 			worldCup.getMatches().forEach(matchDTO -> {
-
 				if (matchDTO.getDate() == null || matchDTO.getTeam1().length() > 20) {
-					return; // salta partidos sin fecha o sin equipos reales
+					return;
 				}
-
-				LocalDateTime matchDate = LocalDate.parse(matchDTO.getDate()).atStartOfDay();
-				Optional<Match> existing = matchRepository.findByHomeTeamAndAwayTeamAndMatchDate(matchDTO.getTeam1(),
-						matchDTO.getTeam2(), matchDate);
-
+				Optional<Match> existing = matchRepository.findByHomeTeamAndAwayTeam(matchDTO.getTeam1(),
+						matchDTO.getTeam2());
 				if (existing.isPresent()) {
 					Match match = existing.get();
 					match.setLocation(matchDTO.getGround());
 					match.setRound(matchDTO.getRound());
+					match.setMatchDate(parseMatchDateTime(matchDTO.getDate(), matchDTO.getTime()));
 					match.setHomeTeamFlag(teamData.get(matchDTO.getTeam1()));
 					match.setAwayTeamFlag(teamData.get(matchDTO.getTeam2()));
 					matchRepository.save(match);
-
 				} else {
 					Match match = new Match();
-
 					match.setHomeTeam(matchDTO.getTeam1());
 					match.setAwayTeam(matchDTO.getTeam2());
 					match.setLocation(matchDTO.getGround());
 					match.setGroup(matchDTO.getGroup());
 					match.setRound(matchDTO.getRound());
-					if (matchDTO.getDate() != null) {
-						LocalDate date = LocalDate.parse(matchDTO.getDate());
-						match.setMatchDate(date.atStartOfDay());
-					}
+					match.setMatchDate(parseMatchDateTime(matchDTO.getDate(), matchDTO.getTime()));
 					match.setHomeTeamFlag(teamData.get(matchDTO.getTeam1()));
 					match.setAwayTeamFlag(teamData.get(matchDTO.getTeam2()));
 					matchRepository.save(match);
 				}
-
 			});
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
-
 }
