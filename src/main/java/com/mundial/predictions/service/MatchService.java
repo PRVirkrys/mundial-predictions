@@ -12,12 +12,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mundial.predictions.dto.TeamDTO;
 import com.mundial.predictions.dto.WorldCupDTO;
 import com.mundial.predictions.model.Match;
 import com.mundial.predictions.repository.MatchRepository;
-
-import tools.jackson.databind.ObjectMapper;
 
 @Service
 public class MatchService {
@@ -69,14 +68,17 @@ public class MatchService {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			RestTemplate restTemplate = new RestTemplate();
+
 			String jsonStr = restTemplate.getForObject(
 					"https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
 					String.class);
 			WorldCupDTO worldCup = mapper.readValue(jsonStr, WorldCupDTO.class);
+
 			String teamsStr = restTemplate.getForObject(
 					"https://raw.githubusercontent.com/openfootball/worldcup.json/refs/heads/master/2026/worldcup.teams.json",
 					String.class);
 			TeamDTO[] teams = mapper.readValue(teamsStr, TeamDTO[].class);
+
 			Map<String, String> teamData = new HashMap<>();
 			for (TeamDTO team : teams) {
 				teamData.put(team.getName(), team.getFlagIcon());
@@ -94,6 +96,13 @@ public class MatchService {
 					match.setMatchDate(parseMatchDateTime(matchDTO.getDate(), matchDTO.getTime()));
 					match.setHomeTeamFlag(teamData.get(matchDTO.getTeam1()));
 					match.setAwayTeamFlag(teamData.get(matchDTO.getTeam2()));
+
+					if (matchDTO.getScore() != null && matchDTO.getScore().getFt() != null) {
+						match.setHomeGoals(matchDTO.getScore().getFt()[0]);
+						match.setAwayGoals(matchDTO.getScore().getFt()[1]);
+
+					}
+
 					matchRepository.save(match);
 				} else {
 					Match match = new Match();

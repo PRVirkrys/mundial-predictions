@@ -1,8 +1,11 @@
 package com.mundial.predictions.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 
 //Representa cada partido del JSON
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MatchDTO {
 	private String round;
 	private String date;
@@ -12,6 +15,7 @@ public class MatchDTO {
 	@Column(name = "match_group")
 	private String group;
 	private String ground;
+	private ScoreDTO score;
 
 	public MatchDTO() {
 
@@ -71,6 +75,14 @@ public class MatchDTO {
 
 	public void setGround(String ground) {
 		this.ground = ground;
+	}
+
+	public ScoreDTO getScore() {
+		return score;
+	}
+
+	public void setScore(ScoreDTO score) {
+		this.score = score;
 	}
 
 }

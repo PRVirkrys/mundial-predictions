@@ -2,6 +2,9 @@ package com.mundial.predictions.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorldCupDTO {
 
 	private String name;
