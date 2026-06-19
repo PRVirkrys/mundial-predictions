@@ -62,4 +62,18 @@ public class PredictionController {
 		predictionService.evaluatePredictions(match);
 	}
 
+	@PostMapping("/evaluate/all")
+
+	public void evaluateAllPredictions() {
+
+		List<Match> matches = matchService.getAllMatches();
+
+		for (Match match : matches) {
+
+			predictionService.evaluatePredictions(match);
+
+		}
+
+	}
+
 }

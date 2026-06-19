@@ -1,9 +1,9 @@
 package com.mundial.predictions.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.mundial.predictions.model.Match;
 import com.mundial.predictions.model.Prediction;
@@ -38,18 +38,27 @@ public class PredictionService {
 		User user = userRepository.findById(userId).orElse(null);
 		Match match = matchRepository.findById(matchId).orElse(null);
 
+		if (user == null || match == null) {
+			return null;
+		}
+
 		Prediction prediction = new Prediction();
 		prediction.setUser(user);
 		prediction.setMatch(match);
 		prediction.setPredictedHomeGoals(homeGoals);
 		prediction.setPredictedAwayGoals(awayGoals);
+		prediction.setCorrectWinner(false);
+		prediction.setCorrectScore(false);
 
 		return predictionRepository.save(prediction);
 	}
 
 	public Prediction updatePrediction(Integer id, Integer homeGoals, Integer awayGoals) {
-
 		Prediction prediction = predictionRepository.findById(id).orElse(null);
+
+		if (prediction == null) {
+			return null;
+		}
 
 		prediction.setPredictedHomeGoals(homeGoals);
 		prediction.setPredictedAwayGoals(awayGoals);
@@ -57,66 +66,129 @@ public class PredictionService {
 		return predictionRepository.save(prediction);
 	}
 
+	@Transactional
 	public void evaluatePredictions(Match match) {
 
-		if (match.isEvaluated())
+		if (match == null) {
+			System.out.println("MATCH NULL");
 			return;
-
-		String realWinner = null;
-		boolean isTie = false;
-
-		String predictionWinner = null;
-		boolean predictionTie = false;
-
-		if (match.getMatchDate().isBefore(LocalDateTime.now())) {
-
-			List<Prediction> predictions = predictionRepository.findByMatch(match);
-
-			if (match.getHomeGoals() > match.getAwayGoals()) {
-				realWinner = match.getHomeTeam();
-			} else if (match.getAwayGoals() > match.getHomeGoals()) {
-				realWinner = match.getAwayTeam();
-			} else {
-				isTie = true;
-			}
-
-			for (Prediction prediction : predictions) {
-
-				User user = prediction.getUser();
-
-				if (prediction.getPredictedHomeGoals() > prediction.getPredictedAwayGoals()) {
-					predictionWinner = match.getHomeTeam();
-				} else if (prediction.getPredictedHomeGoals() < prediction.getPredictedAwayGoals()) {
-					predictionWinner = match.getAwayTeam();
-				} else {
-					predictionTie = true;
-				}
-
-				if (isTie && predictionTie) {
-					prediction.setCorrectWinner(true);
-					user.setTotalScore(user.getTotalScore() + 1);
-				} else if (!isTie && !predictionTie && predictionWinner.equals(realWinner)) {
-					prediction.setCorrectWinner(true);
-					user.setTotalScore(user.getTotalScore() + 1);
-				} else {
-					prediction.setCorrectWinner(false);
-				}
-
-				if (prediction.getPredictedHomeGoals().equals(match.getHomeGoals())
-						&& prediction.getPredictedAwayGoals().equals(match.getAwayGoals())) {
-					prediction.setCorrectScore(true);
-					user.setTotalScore(user.getTotalScore() + 3);
-				} else {
-					prediction.setCorrectScore(false);
-				}
-
-				predictionRepository.save(prediction);
-				userRepository.save(user);
-			}
-
-			match.setEvaluated(true);
-			matchRepository.save(match);
 		}
+
+		System.out.println("ENTRANDO A EVALUATE MATCH ID: " + match.getId());
+
+		if (match.getHomeGoals() == null || match.getAwayGoals() == null) {
+			System.out.println("GOLES NULL PARA MATCH ID: " + match.getId());
+			return;
+		}
+
+		List<Prediction> predictions = predictionRepository.findByMatch(match);
+
+		System.out.println("PREDICCIONES ENCONTRADAS: " + predictions.size());
+
+		for (Prediction prediction : predictions) {
+
+			System.out.println("------------------------------");
+			System.out.println("Evaluando prediction ID: " + prediction.getId());
+
+			boolean correctScore = isCorrectScore(prediction, match);
+			boolean correctWinner = isCorrectWinner(prediction, match);
+
+			// Si acertó marcador exacto, también acertó ganador.
+			if (correctScore) {
+				correctWinner = true;
+			}
+
+			System.out.println(
+					"Predicción: " + prediction.getPredictedHomeGoals() + "-" + prediction.getPredictedAwayGoals());
+
+			System.out.println("Real: " + match.getHomeGoals() + "-" + match.getAwayGoals());
+
+			System.out.println("Nuevo correctWinner: " + correctWinner);
+			System.out.println("Nuevo correctScore: " + correctScore);
+
+			prediction.setCorrectWinner(correctWinner);
+			prediction.setCorrectScore(correctScore);
+
+			predictionRepository.saveAndFlush(prediction);
+
+			User user = prediction.getUser();
+
+			if (user != null) {
+				Integer newTotalScore = calculateTotalScore(user);
+				user.setTotalScore(newTotalScore);
+				userRepository.saveAndFlush(user);
+
+				System.out.println("Nuevo totalScore usuario " + user.getId() + ": " + newTotalScore);
+			}
+		}
+
+		match.setEvaluated(true);
+		matchRepository.saveAndFlush(match);
+
+		System.out.println("MATCH " + match.getId() + " EVALUADO Y GUARDADO");
 	}
 
+	private boolean isCorrectScore(Prediction prediction, Match match) {
+
+		if (prediction == null || match == null) {
+			return false;
+		}
+
+		if (prediction.getPredictedHomeGoals() == null || prediction.getPredictedAwayGoals() == null
+				|| match.getHomeGoals() == null || match.getAwayGoals() == null) {
+			return false;
+		}
+
+		return prediction.getPredictedHomeGoals().equals(match.getHomeGoals())
+				&& prediction.getPredictedAwayGoals().equals(match.getAwayGoals());
+	}
+
+	private boolean isCorrectWinner(Prediction prediction, Match match) {
+
+		if (prediction == null || match == null) {
+			return false;
+		}
+
+		if (prediction.getPredictedHomeGoals() == null || prediction.getPredictedAwayGoals() == null
+				|| match.getHomeGoals() == null || match.getAwayGoals() == null) {
+			return false;
+		}
+
+		int predictedResult = Integer.compare(prediction.getPredictedHomeGoals(), prediction.getPredictedAwayGoals());
+
+		int realResult = Integer.compare(match.getHomeGoals(), match.getAwayGoals());
+
+		return predictedResult == realResult;
+	}
+
+	private Integer calculateTotalScore(User user) {
+
+		if (user == null) {
+			return 0;
+		}
+
+		List<Prediction> predictions = predictionRepository.findByUser(user);
+
+		int totalScore = 0;
+
+		for (Prediction prediction : predictions) {
+
+			Match match = prediction.getMatch();
+
+			if (match == null || !match.isEvaluated()) {
+				continue;
+			}
+
+			boolean correctScore = isCorrectScore(prediction, match);
+			boolean correctWinner = isCorrectWinner(prediction, match);
+
+			if (correctScore) {
+				totalScore += 3;
+			} else if (correctWinner) {
+				totalScore += 1;
+			}
+		}
+
+		return totalScore;
+	}
 }
